@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Agroservicios Don Polo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f4f0; display: flex; justify-content: center; padding: 20px; }
+        .card { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 500px; border-top: 8px solid #2e7d32; text-align: center; }
+        
+        /* Estilo del Encabezado con Logo */
+        .header-logo { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; }
+        .logo-img { max-width: 80px; height: auto; }
+        .header-text h2 { color: #1b5e20; margin: 0; text-transform: uppercase; font-size: 1.2rem; letter-spacing: 1px; text-align: left; }
+        .header-text p { color: #555; margin: 0; font-size: 0.85rem; text-align: left; }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; color: #333; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; }
+        
+        .flex-group { display: flex; gap: 10px; }
+        
+        .checkbox-group { display: flex; align-items: center; background: #e8f5e9; padding: 12px; border-radius: 10px; cursor: pointer; border: 1px solid #c8e6c9; margin-top: 10px; text-align: left; }
+        .checkbox-group input { width: auto; margin-right: 12px; transform: scale(1.3); }
+        
+        .result { margin-top: 25px; padding: 20px; background: #fff; border: 2px dashed #2e7d32; border-radius: 12px; text-align: center; }
+        .total-usd { font-size: 2.2rem; color: #1b5e20; font-weight: bold; margin: 5px 0; }
+        .total-ars { font-size: 1.2rem; color: #666; font-weight: bold; margin-bottom: 10px; }
+        
+        .btn-wsap { display: block; width: 100%; background: #25d366; color: white; text-align: center; padding: 16px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 20px; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+        #detalle { color: #555; font-size: 0.85rem; line-height: 1.5; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="header-logo">
+        <img src="logo-don-polo.png" alt="Logo" class="logo-img" onerror="this.src='https://via.placeholder.com/80?text=DP'">
+        <div class="header-text">
+            <h2>Agroservicios Don Polo</h2>
+            <p>Soluciones con Agras T50</p>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>Tipo de Aplicación</label>
+        <select id="tipoProducto" onchange="calcular()">
+            <option value="liquido">Pulverización (Líquidos)</option>
+            <option value="solido">Fertilización / Siembra (Sólidos)</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        <label>Cultivo</label>
+        <select id="cultivo" onchange="calcular()">
+            <option value="Yerba Mate">Yerba Mate</option>
+            <option value="Té">Té</option>
+            <option value="Tabaco">Tabaco</option>
+            <option value="Forestales">Forestales</option>
+            <option value="Pasturas">Pasturas</option>
+            <option value="Agricultura (Soja/Maíz)">Agricultura (Soja/Maíz)</option>
+        </select>
+    </div>
+
+    <div class="flex-group">
+        <div class="input-group" style="flex:1">
+            <label>Superficie (Has)</label>
+            <input type="number" id="has" placeholder="0" oninput="calcular()">
+        </div>
+        <div class="input-group" style="flex:1">
+            <label id="labelDosis">Dosis (L/ha)</label>
+            <input type="number" id="dosis" placeholder="0" oninput="calcular()">
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label>Cotización Dólar ($)</label>
+        <input type="number" id="dolarHoy" value="1000" oninput="calcular()">
+    </div>
+
+    <div class="checkbox-group" onclick="toggleGLI()">
+        <input type="checkbox" id="gli" onchange="calcular()">
+        <div>
+            <strong>Incluir Análisis Censal GLI</strong><br>
+            <small>Mapeo previo de vigor y salud</small>
+        </div>
+    </div>
+
+    <div class="result">
+        <div id="res-usd" class="total-usd">U$S 0.00</div>
+        <div id="res-ars" class="total-ars">$ 0.00 ARS</div>
+        <div id="detalle">Ingrese datos para calcular</div>
+    </div>
+
+    <a href="#" id="wsapBtn" class="btn-wsap" target="_blank" style="display: none;">
+        📲 Enviar Cotización por WhatsApp
+    </a>
+</div>
+
+<script>
+function toggleGLI() {
+    const cb = document.getElementById('gli');
+    cb.checked = !cb.checked;
+    calcular();
+}
+
+function calcular() {
+    const tipo = document.getElementById('tipoProducto').value;
+    const has = parseFloat(document.getElementById('has').value) || 0;
+    const dosis = parseFloat(document.getElementById('dosis').value) || 0;
+    const valorDolar = parseFloat(document.getElementById('dolarHoy').value) || 1;
+    const cultivo = document.getElementById('cultivo').value;
+    const incluyeGLI = document.getElementById('gli').checked;
+    const wsapBtn = document.getElementById('wsapBtn');
+
+    document.getElementById('labelDosis').innerText = tipo === 'liquido' ? 'Dosis (L/ha)' : 'Dosis (Kg/ha)';
+
+    if (has <= 0) {
+        document.getElementById('res-usd').innerText = "U$S 0.00";
+        document.getElementById('res-ars').innerText = "$ 0.00 ARS";
+        wsapBtn.style.display = "none";
+        return;
+    }
+
+    // Lógica de Precios Escalados
+    let precioBase = (has <= 50) ? 25 : (has <= 100) ? 22 : 20;
+    
+    // Factores de complejidad
+    let factorCultivo = (cultivo === "Yerba Mate" || cultivo === "Té") ? 1.10 : 1.0;
+    let factorDosis = (tipo === 'liquido' && dosis > 20) || (tipo === 'solido' && dosis > 50) ? 1.15 : 1.0;
+    let precioGLI = incluyeGLI ? 5 : 0;
+
+    // Totales
+    let totalUSD = (has * (precioBase + precioGLI)) * factorCultivo * factorDosis + 50; // +50 viáticos
+    let totalARS = totalUSD * valorDolar;
+
+    // Tiempo (16.5 ha/h promedio)
+    let rend = (tipo === 'liquido' && dosis > 20) ? 12 : 16.5;
+    let tiempoH = has / rend;
+    let horas = Math.floor(tiempoH);
+    let mins = Math.round((tiempoH - horas) * 60);
+
+    document.getElementById('res-usd').innerText = `U$S ${totalUSD.toFixed(2)}`;
+    document.getElementById('res-ars').innerText = `$ ${totalARS.toLocaleString()} ARS`;
+    document.getElementById('detalle').innerHTML = `Base: $${precioBase}/ha | Tiempo: ${horas}h ${mins}m | Viáticos: $50`;
+
+    // WhatsApp
+    wsapBtn.style.display = "block";
+    const mensaje = encodeURIComponent(
+        `🛰️ *AGROSERVICIOS DON POLO*\n` +
+        `------------------------------------------\n` +
+        `📦 *Servicio:* ${tipo === 'liquido' ? 'Pulverización' : 'Sólidos'}\n` +
+        `🌱 *Cultivo:* ${cultivo}\n` +
+        `📐 *Superficie:* ${has} Has\n` +
+        `💧 *Dosis:* ${dosis} ${tipo === 'liquido' ? 'L/ha' : 'Kg/ha'}\n` +
+        `📊 *Análisis GLI:* ${incluyeGLI ? 'Incluido ✅' : 'No ❌'}\n` +
+        `⏱️ *Tiempo aprox:* ${horas}h ${mins}m\n` +
+        `------------------------------------------\n` +
+        `💵 *TOTAL:* U$S ${totalUSD.toFixed(2)}\n` +
+        `🏦 *TOTAL ARS:* $ ${totalARS.toLocaleString()} (Ref: $${valorDolar})\n\n` +
+        `_Servicio con DJI Agras T50_`
+    );
+    wsapBtn.href = `https://wa.me/549XXXXXXXXXX?text=${mensaje}`; // PON TU NÚMERO AQUÍ
+}
+</script>
+</body>
+</html>
